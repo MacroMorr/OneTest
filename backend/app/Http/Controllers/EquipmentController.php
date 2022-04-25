@@ -2,28 +2,40 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Equipment;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
-use Illuminate\Routing\Controller as BaseController;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Facades\DB;
-use Symfony\Component\HttpFoundation\JsonResponse;
 
 class EquipmentController extends BaseController
-
 {
     use DispatchesJobs, ValidatesRequests;
-    public function list(Request $request): \Illuminate\Http\JsonResponse
+
+    public function list(): JsonResponse
     {
-/*        $equipments = [
-            ['id' => 1, 'type' => 'Type 1', 'mask' => 'Mask 1'],
-            ['id' => 2, 'type' => 'Type 2', 'mask' => 'Mask 2'],
-            ['id' => 3, 'type' => 'Type 3', 'mask' => 'Mask 3'],
-        ];
-        return response()->json([ 'request' => $request->all(), 'mydata' => $equipments]);*/
         $equipments = DB::table('equipment_name')->get();
-        return response()->json(['request' => $request->all(), 'mydata' => $equipments]);
+        return response()->json($equipments);
     }
 
+    public function save(int $equipmentId, Request $request): JsonResponse
+    {
+        $result = Equipment::where('id', $equipmentId)->update($request->all()['params']);
+        return response()->json($result);
+    }
+
+    public function delete(int $equipmentId): JsonResponse
+    {
+        $result = Equipment::where('id', $equipmentId)->delete();
+        return response()->json($result);
+    }
+
+    public function add(Request $request): JsonResponse
+    {
+        Equipment::insert($request->all()['params']);
+        return response()->json(DB::getPdo()->lastInsertId());
+    }
 
 }

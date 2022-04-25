@@ -26,17 +26,11 @@ Route::get('/equipment/{id}', static function($id) {
     // Запрос данных по id
 });
 
-Route::post('/equipment', static function() {
-    // Создание новой(ых) записи(ей)
-});
+Route::post('/equipment', [EquipmentController::class, 'add']);
 
-Route::put('/equipment/{id}', static function($id) {
-    // Редактирование записи
-});
+Route::put('/equipment/{equipment:id}', [EquipmentController::class, 'save']);
 
-Route::delete('/equipment/{id}', static function($id) {
-    // Удаление записи
-});
+Route::delete('/equipment/{equipment:id}', [EquipmentController::class, 'delete']);
 
 Route::get('/equipment-type', static function() {
     // Удаление записи
