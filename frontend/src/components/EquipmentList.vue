@@ -1,7 +1,7 @@
 <template>
   <div class="equipment">
     <v-data-table :headers="headers" :items="equipments" :loading="loading" class="equipment-table" hide-default-footer>
-      <template v-slot:[`item.edit`]="{ item: equipment }">
+      <template v-slot:[`item.actions`]="{ item: equipment }">
         <v-btn class="edit-btn" small @click="openEditEquipmentModal(equipment)">
           <mdicon height="16" name="pencil" width="16" />
         </v-btn>
