@@ -9,5 +9,5 @@ class Equipment extends Model
 {
     use HasFactory;
 
-    public $table = "equipment_name";
+    public $table = "equipment";
 }

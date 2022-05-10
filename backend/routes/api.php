@@ -1,8 +1,10 @@
 <?php
 
 use App\Http\Controllers\EquipmentController;
+use App\Http\Controllers\EquipmentTypeController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -21,17 +23,11 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 // Вывод пагинированного списка оборудования с возможностью поиска путем указания query параметров советующим ключам ответа
 Route::get('/equipment', [EquipmentController::class, 'list']);
-
-Route::get('/equipment/{id}', static function($id) {
-    // Запрос данных по id
-});
-
 Route::post('/equipment', [EquipmentController::class, 'add']);
-
 Route::put('/equipment/{equipment:id}', [EquipmentController::class, 'save']);
-
 Route::delete('/equipment/{equipment:id}', [EquipmentController::class, 'delete']);
 
-Route::get('/equipment-type', static function() {
-    // Удаление записи
-});
+Route::get('/equipment_type', [EquipmentTypeController::class, 'list']);
+Route::post('/equipment_type', [EquipmentTypeController::class, 'add']);
+Route::put('/equipment_type/{equipment_type:id}', [EquipmentTypeController::class, 'save']);
+Route::delete('/equipment_type/{equipment_type:id}', [EquipmentTypeController::class, 'delete']);

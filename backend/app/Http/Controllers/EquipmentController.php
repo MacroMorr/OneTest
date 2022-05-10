@@ -16,7 +16,7 @@ class EquipmentController extends BaseController
 
     public function list(): JsonResponse
     {
-        $equipments = DB::table('equipment_name')->get();
+        $equipments = DB::table('equipment')->get();
         return response()->json($equipments);
     }
 

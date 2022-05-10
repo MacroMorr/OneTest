@@ -16,6 +16,3 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [EquipmentController::class, 'list']);
 
-/*Route::get('/', function () {
-    return view('welcome');
-});*/

@@ -10,11 +10,9 @@
         </v-btn>
       </template>
     </v-data-table>
+    <v-btn color="red lighten-2" dark @click="openAddEquipmentModal()">Add equipment</v-btn>
 
-    <VDialog v-model="dialog" max-width="500px" @click:outside="closeModal">
-      <template v-slot:activator="{ item: equipment }">
-        <v-btn color="red lighten-2" dark @click="openAddEquipmentModal(equipment)">Add a note</v-btn>
-      </template>
+    <VDialog v-if="dialog" v-model="dialog" max-width="500px" @click:outside="closeModal">
       <v-card>
         <v-card-title>
           <span class="text-h5">{{ titleEditEquipmentModal }}</span>
@@ -22,21 +20,43 @@
 
         <v-card-text>
           <v-container>
-            <v-row v-if="dialogType === 'edit' || dialogType === 'addNote'">
-              <v-col cols="12" md="4" sm="6">
+            <v-row v-for="(error, idx) in errors" :key="idx">
+              <v-col>
+                <v-alert dense outlined type="error">
+                  {{ error }}
+                </v-alert>
+              </v-col>
+            </v-row>
+
+            <v-row v-if="dialogType === 'edit'">
+              <v-col cols="12" md="12">
                 <v-text-field v-model="tmpEquipment.id" disabled label="#" />
               </v-col>
-              <v-col cols="12" md="4" sm="6">
+            </v-row>
+
+            <v-row v-if="dialogType === 'edit' || dialogType === 'add'">
+              <v-col cols="12" md="4">
                 <v-text-field v-model="tmpEquipment.code" label="Code" />
               </v-col>
-              <v-col cols="12" md="4" sm="6">
-                <v-text-field v-model="tmpEquipment.code_equipment" label="Code Equipment" />
+
+              <v-col cols="12" md="4">
+                <v-select
+                  v-model="tmpEquipment.equipment_type_id"
+                  :items="equipmentTypeList"
+                  item-text="code"
+                  item-value="id"
+                  label="Equipment type"
+                />
               </v-col>
-              <v-col cols="12" md="4" sm="6">
+
+              <v-col cols="12" md="4">
                 <v-text-field v-model="tmpEquipment.serial_number" label="Serial NUMBER" />
               </v-col>
-              <v-col cols="12" md="4" sm="6">
-                <v-text-field v-model="tmpEquipment.notes" label="Notes" />
+            </v-row>
+
+            <v-row v-if="dialogType === 'edit' || dialogType === 'add'">
+              <v-col>
+                <v-textarea v-model="tmpEquipment.note" label="note" />
               </v-col>
             </v-row>
           </v-container>
@@ -46,7 +66,7 @@
           <v-spacer></v-spacer>
           <v-btn color="blue darken-1" text @click="closeModal"> Cancel</v-btn>
           <v-btn v-if="dialogType === 'edit'" color="blue darken-1" text @click="saveEquipment"> Save</v-btn>
-          <v-btn v-if="dialogType === 'addNote'" color="blue darken-1" text @click="addEquipment"> Add</v-btn>
+          <v-btn v-if="dialogType === 'add'" color="blue darken-1" text @click="addEquipment"> Add</v-btn>
           <v-btn v-if="dialogType === 'remove'" color="red darken-3" text @click="deleteEquipment"> Delete</v-btn>
         </v-card-actions>
       </v-card>
@@ -56,14 +76,14 @@
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
-import { TEquipment } from "@/types";
+import { TEquipment, TEquipmentType } from "@/types";
 
 const DEFAULT_EQUIPMENT = {
   id: null,
   code: null,
-  code_equipment: null,
+  equipment_type_id: null,
   serial_number: null,
-  notes: null,
+  note: null,
 };
 
 @Component({})
@@ -80,7 +100,7 @@ export default class EquipmentList extends Vue {
     },
     {
       text: "Code equipment",
-      value: "code_equipment",
+      value: "equipment_type_id",
     },
     {
       text: "SERIAL NUMBER",
@@ -88,7 +108,7 @@ export default class EquipmentList extends Vue {
     },
     {
       text: "NOTE",
-      value: "notes",
+      value: "note",
     },
     {
       text: "",
@@ -96,13 +116,16 @@ export default class EquipmentList extends Vue {
     },
   ];
   equipments: TEquipment[] = [];
+  equipmentTypeList: TEquipmentType[] = [];
   tmpEquipment: TEquipment | null = null;
 
   form = {
     name: null,
   };
+  errors: string[] = [];
+
   dialog = false;
-  dialogType: "edit" | "remove" | "addNote" | null = null;
+  dialogType: "edit" | "remove" | "add" | null = null;
 
   get titleEditEquipmentModal(): string | null {
     switch (this.dialogType) {
@@ -112,7 +135,7 @@ export default class EquipmentList extends Vue {
       case "remove":
         return `Are you sure you want to delete equipment "${this.tmpEquipment?.serial_number}"?`;
 
-      case "addNote":
+      case "add":
         return `Fill in the fields`;
     }
     return null;
@@ -125,8 +148,14 @@ export default class EquipmentList extends Vue {
 
   openEditEquipmentModal(equipment: TEquipment): void {
     this.tmpEquipment = { ...equipment };
-    this.dialogType = "edit";
-    this.dialog = true;
+    this.$store
+      .dispatch("getEquipmentTypeList")
+      .then((list) => {
+        this.equipmentTypeList = list;
+        this.dialogType = "edit";
+        this.dialog = true;
+      })
+      .catch(({ exception, message }) => alert(`[${exception}] ${message}`));
   }
 
   openRemoveEquipmentModal(equipment: TEquipment): void {
@@ -135,10 +164,16 @@ export default class EquipmentList extends Vue {
     this.dialog = true;
   }
 
-  openAddEquipmentModal(equipment: TEquipment): void {
-    this.tmpEquipment = { ...equipment };
-    this.dialogType = "addNote";
-    this.dialog = true;
+  openAddEquipmentModal(): void {
+    this.tmpEquipment = { ...DEFAULT_EQUIPMENT } as any;
+    this.$store
+      .dispatch("getEquipmentTypeList")
+      .then((list) => {
+        this.equipmentTypeList = list;
+        this.dialogType = "add";
+        this.dialog = true;
+      })
+      .catch(({ exception, message }) => alert(`[${exception}] ${message}`));
   }
 
   saveEquipment(): void {
@@ -160,6 +195,26 @@ export default class EquipmentList extends Vue {
   }
 
   addEquipment(): void {
+    if (!/\d+/.test((this.tmpEquipment as TEquipment).code)) {
+      this.errors.push("Code should be a number!");
+      return;
+    }
+
+    if (!/\d+/.test((this.tmpEquipment as TEquipment).equipment_type_id)) {
+      this.errors.push("Code equipment should be a number!");
+      return;
+    }
+
+    if (!/\d+|a-z|A-Z/.test((this.tmpEquipment as TEquipment).serial_number)) {
+      this.errors.push("Serial number should be a number!");
+      return;
+    }
+
+    if (!/\w/.test((this.tmpEquipment as TEquipment).note)) {
+      this.errors.push("note use Letters");
+      return;
+    }
+
     this.$store
       .dispatch("addEquipment", this.tmpEquipment)
       .then((id: number) => {
