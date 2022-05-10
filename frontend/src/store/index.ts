@@ -1,13 +1,14 @@
 import Vue from "vue";
-import Vuex from "vuex";
+import Vuex, { StoreOptions } from "vuex";
 import equipment from "./equipment";
 import equipmentType from "./equipment_type";
 
 Vue.use(Vuex);
 
-export default new Vuex.Store({
+const store: StoreOptions<any> = {
   modules: {
     equipment,
     equipmentType,
-  },
-});
+  } as any,
+};
+export default new Vuex.Store<any>(store);

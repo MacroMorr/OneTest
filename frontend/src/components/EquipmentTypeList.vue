@@ -105,7 +105,11 @@ export default class EquipmentTypeList extends Vue {
       value: "actions",
     },
   ];
-  equipmentTypeList: TEquipmentType[] = [];
+
+  get equipmentTypeList(): TEquipmentType[] {
+    return this.$store.state.equipmentType.equipmentTypeList;
+  }
+
   tmpEquipmentType: TEquipmentType | null = null;
 
   form = {
@@ -132,8 +136,7 @@ export default class EquipmentTypeList extends Vue {
 
   mounted(): void {
     this.loading = true;
-    this.$store.dispatch(`getEquipmentTypeList`).then((equipmentTypeList) => {
-      this.equipmentTypeList = equipmentTypeList;
+    this.$store.dispatch(`getEquipmentTypeList`).then(() => {
       this.loading = false;
     });
   }
@@ -147,8 +150,7 @@ export default class EquipmentTypeList extends Vue {
     this.tmpEquipmentType = { ...equipmentType };
     this.$store
       .dispatch("getEquipmentTypeList")
-      .then((listType) => {
-        this.equipmentTypeList = listType;
+      .then(() => {
         this.dialogType = "edit";
         this.dialog = true;
       })
@@ -171,14 +173,6 @@ export default class EquipmentTypeList extends Vue {
     this.$store
       .dispatch("saveEquipmentType", this.tmpEquipmentType)
       .then(() => {
-        this.equipmentTypeList = this.equipmentTypeList.map((equipmentType: TEquipmentType) => {
-          if (equipmentType.id === this.tmpEquipmentType?.id) {
-            return this.tmpEquipmentType;
-          }
-
-          return equipmentType;
-        }) as TEquipmentType[];
-
         this.tmpEquipmentType = { ...DEFAULT_EQUIPMENT_TYPE } as never as TEquipmentType;
         this.dialog = false;
       })
@@ -196,16 +190,14 @@ export default class EquipmentTypeList extends Vue {
       return;
     }
 
-    if (!/\d+|a-z|A-Z/.test((this.tmpEquipmentType as TEquipmentType).mask_serial_number)) {
+    if (!/(\d|[A-z])+/.test((this.tmpEquipmentType as TEquipmentType).mask_serial_number)) {
       this.errors.push("Serial number should be a number TYPE!");
       return;
     }
 
     this.$store
       .dispatch("addEquipmentType", this.tmpEquipmentType)
-      .then((id: number) => {
-        (this.tmpEquipmentType as TEquipmentType).id = id;
-        this.equipmentTypeList.push(this.tmpEquipmentType as TEquipmentType);
+      .then(() => {
         this.tmpEquipmentType = { ...DEFAULT_EQUIPMENT_TYPE } as never as TEquipmentType;
         this.dialog = false;
       })
@@ -216,14 +208,6 @@ export default class EquipmentTypeList extends Vue {
     this.$store
       .dispatch("deleteEquipmentType", this.tmpEquipmentType)
       .then(() => {
-        const newEquipmentTypeList: TEquipmentType[] = [];
-        this.equipmentTypeList.forEach((equipmentType: TEquipmentType) => {
-          if (equipmentType.id !== this.tmpEquipmentType?.id) {
-            newEquipmentTypeList.push(equipmentType);
-          }
-        });
-        this.equipmentTypeList = newEquipmentTypeList;
-
         this.tmpEquipmentType = { ...DEFAULT_EQUIPMENT_TYPE } as never as TEquipmentType;
         this.dialog = false;
       })
